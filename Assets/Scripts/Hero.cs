@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class Hero : MonoBehaviour
 {
-    [SerializeField] private float speed = 3f; // speed
-    [SerializeField] private int lives = 5; // life
-    [SerializeField] private float jumpForce = 15f; // jump
+    [SerializeField] private float speed = 3f;
+    [SerializeField] private int lives = 5;
+    [SerializeField] private float jumpForce = 15f;
     [SerializeField] private AudioSource jumpSource;
 
     private bool isGrounded = false;
@@ -22,23 +22,22 @@ public class Hero : MonoBehaviour
         get { return (States)anim.GetInteger("state"); }
         set { anim.SetInteger("state", (int)value); }
     }
-    // 🔁 === Появление еды ===
+
+    // === Появление еды ===
     [Header("Food Spawning")]
-    [SerializeField] private GameObject[] foodPrefabs;  // массив префабов еды
-    [SerializeField] private float spawnInterval = 2f;  // интервал спауна
-    [SerializeField] private float spawnDistanceX = 2f; // расстояние по X от игрока
-    [SerializeField] private float spawnHeight = 4f;    // высота спауна над игроком
+    [SerializeField] private GameObject[] foodPrefabs;
+    [SerializeField] private float spawnInterval = 2f;
+    [SerializeField] private float spawnDistanceX = 2f;
+    [SerializeField] private float spawnHeight = 4f;
     private float spawnTimer = 0f;
-    // =========================
+
     private void Awake()
     {
-        Instance = this; // add
+        Instance = this;
 
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         sprite = GetComponentInChildren<SpriteRenderer>();
-
-        // Debug.Log(sprite);
     }
 
     private void FixedUpdate()
@@ -48,18 +47,22 @@ public class Hero : MonoBehaviour
 
     private void Update()
     {
-        if (isGrounded) State = States.idle;
-
-        if (Input.GetButton("Horizontal"))
+        if (isGrounded)
         {
-            Run();
+            if (Input.GetButton("Horizontal"))
+                Run();
+            else
+                State = States.idle;
+
+            if (Input.GetButtonDown("Jump"))
+                Jump();
         }
-        if (isGrounded && Input.GetButtonDown("Jump"))
+        else
         {
-            Jump();
+            State = States.jump;
         }
 
-        // 🔁 Добавь спаун еды прямо сюда:
+        // Спавн еды
         spawnTimer += Time.deltaTime;
         if (spawnTimer >= spawnInterval)
         {
@@ -72,46 +75,34 @@ public class Hero : MonoBehaviour
     {
         if (isGrounded) State = States.run;
 
-        // Vector3 dir = transform.right * Input.GetAxis("Horizontal");
-
-        float horizontalInput = Input.GetAxis("Horizontal"); //add
-                                                             //  Debug.Log("Horizontal Input: " + horizontalInput); //add
-        Vector3 dir = transform.right * horizontalInput; // add
+        float horizontalInput = Input.GetAxis("Horizontal");
+        Vector3 dir = transform.right * horizontalInput;
 
         transform.position = Vector3.MoveTowards(transform.position, transform.position + dir, speed * Time.deltaTime);
 
-        //sprite.flipX = dir.x < 0.0f;
-
-        sprite.flipX = horizontalInput < 0.0f; // add
-
-        // Debug.Log("FlipX: " + sprite.flipX); //add
-
+        sprite.flipX = horizontalInput < 0.0f;
     }
 
     private void Jump()
     {
-         if (jumpSource != null)
-         {
+        if (jumpSource != null)
+        {
             jumpSource.Play();
-         }
-      
-        rb.AddForce(transform.up * jumpForce, ForceMode2D.Impulse);
+        }
 
-       
+        rb.AddForce(transform.up * jumpForce, ForceMode2D.Impulse);
+        State = States.jump;
     }
 
-    private void CheckGround() // new
+    private void CheckGround()
     {
-        Vector2 checkPosition = new Vector2(transform.position.x, transform.position.y - 0.5f); // ниже!
+        Vector2 checkPosition = new Vector2(transform.position.x, transform.position.y - 0.5f);
         float checkRadius = 0.2f;
 
         Collider2D[] colliders = Physics2D.OverlapCircleAll(checkPosition, checkRadius);
         isGrounded = colliders.Length > 0;
 
-
-        Debug.DrawLine(transform.position, checkPosition, Color.red); // отладка
-
-        if (!isGrounded) State = States.jump;
+        Debug.DrawLine(transform.position, checkPosition, Color.red);
     }
 
     public void GetDamage()
@@ -130,9 +121,9 @@ public class Hero : MonoBehaviour
 
         Instantiate(foodPrefabs[index], spawnPos, Quaternion.identity);
     }
-
 }
 
+// === Перечисление состояний анимации ===
 public enum States
 {
     idle,
