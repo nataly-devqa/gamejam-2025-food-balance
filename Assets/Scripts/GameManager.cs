@@ -50,11 +50,12 @@ public class GameManager : MonoBehaviour
     void Lose(string reason)
     {
         gameEnded = true;
-        ShowMessage("❌ Game over " + reason);
+        ShowMessage("❌ Game over \n" + reason);
     }
 
     void ShowMessage(string message)
     {
+        Debug.Log("⚠️ ShowMessage called: " + message); // ← проверь в Console
         if (resultText != null)
         {
             resultText.text = message;
